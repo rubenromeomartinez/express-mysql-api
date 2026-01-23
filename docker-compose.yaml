@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # Servicio de la Base de Datos MySQL
+  db:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: d13g0f3r  # Contraseña de root
+      MYSQL_DATABASE: demo           # Nombre de la base de datos
+      MYSQL_USER: demo               # Usuario de la base de datos
+      MYSQL_PASSWORD: d13g0f3r       # Contraseña del usuario
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  # API Express/Node.js
+  api:
+    build: ./api # Busca el Dockerfile dentro de la carpeta /api
+    container_name: express-api
+    restart: always
+    ports:
+      - "3000:3000"
+    #volumes:
+    #  - .:/usr/src/app
+    #  - /usr/src/app/node_modules # Evita sobrescribir node_modules
+    depends_on:
+      - db                      # Asegura que la DB se inicie antes que la app
+    environment:
+      DB_HOST: db               # El nombre del servicio de la DB en Docker Compose
+      DB_USER: demo
+      DB_PASSWORD: d13g0f3r
+      DB_NAME: demo
+      DB_PORT: 3306
+      APP_PORT: 3000
+
+  # 3. Frontend (Aplicación Web)
+  client:
+    build: ./client  # Busca el Dockerfile dentro de la carpeta /client
+    container_name: web-client
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api
+
+volumes:
+  db_data:

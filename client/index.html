@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Inventario de productos</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        h2 { text-align: center; color: #2c3e50; }
+        
+        /* Estilos del Formulario */
+        form { display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+        input, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .btn-save { background: #27ae60; color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-save:hover { background: #219150; }
+        .btn-cancel { background: #95a5a6; color: white; border: none; display: none; padding: 8px; border-radius: 6px; cursor: pointer; }
+
+        /* Estilos de la Lista */
+        .item-card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .item-card:hover { border-color: #3498db; }
+        .item-info h4 { margin: 0; color: #2980b9; }
+        .item-info p { margin: 5px 0 0; color: #7f8c8d; font-size: 0.9em; }
+        
+        .actions { display: flex; gap: 8px; }
+        .btn-edit { background: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+        .btn-delete { background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📦 Gestión de Productos</h2>
+
+    <form id="crudForm">
+        <input type="hidden" id="itemId"> <input type="text" id="name" placeholder="Nombre del producto" required>
+        <textarea id="description" placeholder="Descripción breve..." rows="2"></textarea>
+        <button type="submit" id="mainBtn" class="btn-save">Guardar Producto</button>
+        <button type="button" id="cancelBtn" class="btn-cancel">Cancelar Edición</button>
+    </form>
+
+    <div style="margin-bottom: 15px;">
+        <input type="text" id="searchInput" placeholder="🔍 Buscar por nombre o descripción..." 
+           style="border: 2px solid var(--primary); margin-bottom: 0;">
+    </div>
+
+    <div id="itemsContainer">
+        </div>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:3000/api/items';
+    const form = document.getElementById('crudForm');
+    const itemsContainer = document.getElementById('itemsContainer');
+    const mainBtn = document.getElementById('mainBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const searchInput = document.getElementById('searchInput');
+
+    // 1. LEER (READ): Obtener y mostrar los datos
+    async function loadItems(query = '') {
+        try 
+        {
+        // Si hay query, la añadimos a la URL: ?q=termino
+        const url = query ? `${API_URL}?q=${encodeURIComponent(query)}` : API_URL;
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        renderItems(data); // Separamos el renderizado para mayor orden
+        } 
+        catch (err) 
+        {
+        console.error("Error cargando datos:", err);
+        }
+    }
+
+    // 2. Escuchamos cuando el usuario escribe en la barra de búsqueda
+    searchInput.addEventListener('input', (e) => {
+        const term = e.target.value;
+        loadItems(term); // Llamamos a la API con cada letra escrita
+    });
+
+    // Función auxiliar para renderizar (el mismo map que ya tenías)
+    function renderItems(data) {
+    itemsContainer.innerHTML = data.length === 0 
+        ? '<p style="text-align:center; color:#999;">No se encontraron resultados.</p>'
+        : data.map(item => `
+            <div class="item-card">
+                <div class="item-info">
+                    <h4>${item.name}</h4>
+                    <p>${item.description || 'Sin descripción'}</p>
+                </div>
+                <div class="actions">
+                    <button class="btn-edit" onclick="prepareEdit(${item.id}, '${item.name}', '${item.description}')">✎</button>
+                    <button class="btn-delete" onclick="deleteItem(${item.id})">🗑</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // 2. CREAR (POST) / ACTUALIZAR (PUT)
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        
+        const id = document.getElementById('itemId').value;
+        const payload = {
+            name: document.getElementById('name').value,
+            description: document.getElementById('description').value
+        };
+
+        const config = {
+            method: id ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        };
+
+        const url = id ? `${API_URL}/${id}` : API_URL;
+
+        try {
+            const response = await fetch(url, config);
+            if (response.ok) {
+                resetForm();
+                loadItems();
+            }
+        } catch (err) {
+            alert("Hubo un error al procesar la solicitud.");
+        }
+    };
+
+    // 3. ELIMINAR (DELETE)
+    async function deleteItem(id) {
+        if (confirm('¿Estás seguro de que deseas eliminar este registro?')) {
+            try {
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                loadItems();
+            } catch (err) {
+                console.error("Error al borrar:", err);
+            }
+        }
+    }
+
+    // Preparar el formulario para edición
+    window.prepareEdit = (id, name, desc) => {
+        document.getElementById('itemId').value = id;
+        document.getElementById('name').value = name;
+        document.getElementById('description').value = desc;
+        
+        mainBtn.innerText = "Actualizar Producto";
+        mainBtn.style.background = "#3498db";
+        cancelBtn.style.display = "block";
+    };
+
+    // Resetear formulario a su estado original
+    function resetForm() {
+        form.reset();
+        document.getElementById('itemId').value = '';
+        mainBtn.innerText = "Guardar Producto";
+        mainBtn.style.background = "#27ae60";
+        cancelBtn.style.display = "none";
+    }
+
+    cancelBtn.onclick = resetForm;
+
+    // Carga inicial al entrar
+    loadItems();
+</script>
+
+</body>
+</html>
