@@ -13,7 +13,9 @@ const app = express();
 
 // Middleware CORS: Esto le dice al navegador que acepte peticiones
 // provenientes de otros dominios/puertos (como el 8080 de tu cliente).
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:8080', 'https://tu-cliente-en-railway.up.railway.app']
+}));
 
 const PORT = process.env.APP_PORT || 3000;
 
@@ -47,8 +49,8 @@ async function initializeDatabase() {
     console.log('✅ Tabla "items" verificada/creada.');
 
     // Iniciar el servidor Express
-    app.listen(PORT, () => {
-      console.log(`🚀 Servidor Express escuchando en el puerto ${PORT}`);
+    app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Servicio corriendo en el puerto ${PORT}`);
     });
 
   } catch (error) {

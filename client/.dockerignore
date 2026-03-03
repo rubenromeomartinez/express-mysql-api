@@ -1,0 +1,13 @@
+# Dependencias
+node_modules
+
+# Archivos de Docker
+Dockerfile
+docker-compose.yml
+
+# Git
+.git
+.gitignore
+
+# Archivos del sistema
+.DS_Store

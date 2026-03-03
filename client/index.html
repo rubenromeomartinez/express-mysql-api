@@ -3,45 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Inventario de productos</title>
+    <title>Inventario Pro | Gestión de Items</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; padding: 20px; }
-        .container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
-        h2 { text-align: center; color: #2c3e50; }
-        
-        /* Estilos del Formulario */
-        form { display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
-        input, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
-        .btn-save { background: #27ae60; color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-save:hover { background: #219150; }
-        .btn-cancel { background: #95a5a6; color: white; border: none; display: none; padding: 8px; border-radius: 6px; cursor: pointer; }
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --text: #1e293b;
+        }
 
-        /* Estilos de la Lista */
-        .item-card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
-        .item-card:hover { border-color: #3498db; }
-        .item-info h4 { margin: 0; color: #2980b9; }
-        .item-info p { margin: 5px 0 0; color: #7f8c8d; font-size: 0.9em; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+        }
+
+        /* Encabezado */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text);
+        }
+
+        /* Panel de Formulario */
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .btn-save { background-color: var(--primary); color: white; }
+        .btn-save:hover { background-color: var(--primary-dark); }
         
-        .actions { display: flex; gap: 8px; }
-        .btn-edit { background: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
-        .btn-delete { background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+        .btn-cancel { 
+            background-color: transparent; 
+            color: var(--secondary); 
+            margin-top: 10px;
+            text-decoration: underline;
+        }
+
+        /* Barra de búsqueda */
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-container i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+        }
+
+        .search-container input {
+            padding-left: 40px;
+            background-color: white;
+        }
+
+        /* Lista de Items */
+        .item-card {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #f1f5f9;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .item-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .item-info h4 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--text);
+        }
+
+        .item-info p {
+            margin: 4px 0 0;
+            color: var(--secondary);
+            font-size: 0.9rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .edit-bg { background-color: #fef3c7; color: var(--warning); }
+        .edit-bg:hover { background-color: var(--warning); color: white; }
+
+        .delete-bg { background-color: #fee2e2; color: var(--danger); }
+        .delete-bg:hover { background-color: var(--danger); color: white; }
+
+        /* Animación de carga */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--secondary);
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>📦 Gestión de Productos</h2>
+    <div class="header">
+        <h2><i class="fas fa-boxes-stacked" style="color: var(--primary);"></i> Inventario Pro</h2>
+    </div>
 
-    <form id="crudForm">
-        <input type="hidden" id="itemId"> <input type="text" id="name" placeholder="Nombre del producto" required>
-        <textarea id="description" placeholder="Descripción breve..." rows="2"></textarea>
-        <button type="submit" id="mainBtn" class="btn-save">Guardar Producto</button>
-        <button type="button" id="cancelBtn" class="btn-cancel">Cancelar Edición</button>
-    </form>
+    <div class="card">
+        <form id="crudForm">
+            <input type="hidden" id="itemId">
+            <div class="form-group">
+                <input type="text" id="name" placeholder="Nombre del producto o item" required>
+            </div>
+            <div class="form-group">
+                <textarea id="description" placeholder="Añade una descripción detallada..." rows="3"></textarea>
+            </div>
+            <button type="submit" id="mainBtn" class="btn btn-save">
+                <i class="fas fa-plus"></i> Guardar Registro
+            </button>
+            <button type="button" id="cancelBtn" class="btn btn-cancel" style="display: none;">
+                Cancelar edición
+            </button>
+        </form>
+    </div>
 
-    <div style="margin-bottom: 15px;">
-        <input type="text" id="searchInput" placeholder="🔍 Buscar por nombre o descripción..." 
-           style="border: 2px solid var(--primary); margin-bottom: 0;">
+    <div class="search-container">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Filtrar items por nombre o descripción...">
     </div>
 
     <div id="itemsContainer">
@@ -49,7 +215,19 @@
 </div>
 
 <script>
-    const API_URL = 'http://localhost:3000/api/items';
+    // --- AQUÍ VA TODA TU LÓGICA DE JAVASCRIPT ANTERIOR ---
+    // (Asegúrate de copiar la lógica fetch, las funciones loadItems, deleteItem, etc.)
+    // La única diferencia es que en renderItems usaremos los nuevos iconos:
+    
+    // Detectamos si estamos en local o en la nube
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    // URL de la API: cámbiala por tu URL real de Railway tras el primer despliegue
+    const PROD_URL = 'https://tu-api-en-railway.up.railway.app/api/items';
+    const LOCAL_URL = 'http://localhost:3000/api/items';
+    const API_URL = isLocal ? LOCAL_URL : PROD_URL;
+    console.log(`🔌 Conectado a la API en: ${API_URL}`);
+
     const form = document.getElementById('crudForm');
     const itemsContainer = document.getElementById('itemsContainer');
     const mainBtn = document.getElementById('mainBtn');
@@ -83,21 +261,25 @@
     function renderItems(data) {
     itemsContainer.innerHTML = data.length === 0 
         ? '<p style="text-align:center; color:#999;">No se encontraron resultados.</p>'
-        : data.map(item => `
+        /* Ejemplo de cómo actualizar el renderItems para los nuevos estilos:*/
+       :data.map(item => `
             <div class="item-card">
                 <div class="item-info">
                     <h4>${item.name}</h4>
                     <p>${item.description || 'Sin descripción'}</p>
                 </div>
                 <div class="actions">
-                    <button class="btn-edit" onclick="prepareEdit(${item.id}, '${item.name}', '${item.description}')">✎</button>
-                    <button class="btn-delete" onclick="deleteItem(${item.id})">🗑</button>
+                    <button class="btn-action edit-bg" onclick="prepareEdit(...)">
+                        <i class="fas fa-pen"></i>
+                    </button>
+                    <button class="btn-action delete-bg" onclick="deleteItem(${item.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
             </div>
-        `).join('');
-    }
-
-    // 2. CREAR (POST) / ACTUALIZAR (PUT)
+       `)
+    
+       // 2. CREAR (POST) / ACTUALIZAR (PUT)
     form.onsubmit = async (e) => {
         e.preventDefault();
         

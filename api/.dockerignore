@@ -1,0 +1,19 @@
+# Dependencias
+node_modules
+npm-debug.log
+
+# Variables de entorno (Sensible)
+.env
+
+# Archivos de Docker y logs
+Dockerfile
+docker-compose.yml
+*.log
+
+# Git
+.git
+.gitignore
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
