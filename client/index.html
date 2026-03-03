@@ -34,7 +34,6 @@
             max-width: 700px;
         }
 
-        /* Encabezado */
         .header {
             text-align: center;
             margin-bottom: 30px;
@@ -44,15 +43,14 @@
             font-size: 2rem;
             font-weight: 600;
             margin: 0;
-            color: var(--text);
         }
 
-        /* Panel de Formulario */
+        /* Card del Formulario */
         .card {
             background: white;
             padding: 25px;
             border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             margin-bottom: 25px;
         }
 
@@ -100,7 +98,7 @@
             text-decoration: underline;
         }
 
-        /* Barra de búsqueda */
+        /* Buscador */
         .search-container {
             position: relative;
             margin-bottom: 20px;
@@ -108,15 +106,16 @@
 
         .search-container i {
             position: absolute;
-            left: 12px;
+            left: 15px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--secondary);
         }
 
         .search-container input {
-            padding-left: 40px;
+            padding-left: 45px;
             background-color: white;
+            border-width: 2px;
         }
 
         /* Lista de Items */
@@ -129,34 +128,22 @@
             justify-content: space-between;
             align-items: center;
             border: 1px solid #f1f5f9;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: 0.2s;
         }
 
         .item-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.05);
         }
 
-        .item-info h4 {
-            margin: 0;
-            font-size: 1.1rem;
-            color: var(--text);
-        }
+        .item-info h4 { margin: 0; color: var(--text); }
+        .item-info p { margin: 4px 0 0; color: var(--secondary); font-size: 0.9rem; }
 
-        .item-info p {
-            margin: 4px 0 0;
-            color: var(--secondary);
-            font-size: 0.9rem;
-        }
-
-        .actions {
-            display: flex;
-            gap: 8px;
-        }
+        .actions { display: flex; gap: 8px; }
 
         .btn-action {
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             border-radius: 8px;
             border: none;
             display: flex;
@@ -172,12 +159,7 @@
         .delete-bg { background-color: #fee2e2; color: var(--danger); }
         .delete-bg:hover { background-color: var(--danger); color: white; }
 
-        /* Animación de carga */
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: var(--secondary);
-        }
+        .empty-state { text-align: center; padding: 40px; color: var(--secondary); }
     </style>
 </head>
 <body>
@@ -191,10 +173,10 @@
         <form id="crudForm">
             <input type="hidden" id="itemId">
             <div class="form-group">
-                <input type="text" id="name" placeholder="Nombre del producto o item" required>
+                <input type="text" id="name" placeholder="Nombre del producto" required>
             </div>
             <div class="form-group">
-                <textarea id="description" placeholder="Añade una descripción detallada..." rows="3"></textarea>
+                <textarea id="description" placeholder="Descripción detallada..." rows="3"></textarea>
             </div>
             <button type="submit" id="mainBtn" class="btn btn-save">
                 <i class="fas fa-plus"></i> Guardar Registro
@@ -207,7 +189,7 @@
 
     <div class="search-container">
         <i class="fas fa-search"></i>
-        <input type="text" id="searchInput" placeholder="Filtrar items por nombre o descripción...">
+        <input type="text" id="searchInput" placeholder="Buscar por nombre o descripción...">
     </div>
 
     <div id="itemsContainer">
@@ -215,74 +197,61 @@
 </div>
 
 <script>
-    // --- AQUÍ VA TODA TU LÓGICA DE JAVASCRIPT ANTERIOR ---
-    // (Asegúrate de copiar la lógica fetch, las funciones loadItems, deleteItem, etc.)
-    // La única diferencia es que en renderItems usaremos los nuevos iconos:
-    
-    // Detectamos si estamos en local o en la nube
+    // --- CONFIGURACIÓN DE URL INTELIGENTE ---
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-    // URL de la API: cámbiala por tu URL real de Railway tras el primer despliegue
+    // Reemplaza esta URL con la que te asigne Railway para tu servicio API
     const PROD_URL = 'https://tu-api-en-railway.up.railway.app/api/items';
     const LOCAL_URL = 'http://localhost:3000/api/items';
+    
     const API_URL = isLocal ? LOCAL_URL : PROD_URL;
-    console.log(`🔌 Conectado a la API en: ${API_URL}`);
 
     const form = document.getElementById('crudForm');
     const itemsContainer = document.getElementById('itemsContainer');
+    const searchInput = document.getElementById('searchInput');
     const mainBtn = document.getElementById('mainBtn');
     const cancelBtn = document.getElementById('cancelBtn');
-    const searchInput = document.getElementById('searchInput');
 
-    // 1. LEER (READ): Obtener y mostrar los datos
+    // --- 1. LEER (READ) Y BUSCAR ---
     async function loadItems(query = '') {
-        try 
-        {
-        // Si hay query, la añadimos a la URL: ?q=termino
-        const url = query ? `${API_URL}?q=${encodeURIComponent(query)}` : API_URL;
-        const res = await fetch(url);
-        const data = await res.json();
-        
-        renderItems(data); // Separamos el renderizado para mayor orden
-        } 
-        catch (err) 
-        {
-        console.error("Error cargando datos:", err);
+        try {
+            const url = query ? `${API_URL}?q=${encodeURIComponent(query)}` : API_URL;
+            const res = await fetch(url);
+            const data = await res.json();
+            renderItems(data);
+        } catch (err) {
+            console.error("Error cargando datos:", err);
+            itemsContainer.innerHTML = '<p class="empty-state">Error al conectar con la API.</p>';
         }
     }
 
-    // 2. Escuchamos cuando el usuario escribe en la barra de búsqueda
-    searchInput.addEventListener('input', (e) => {
-        const term = e.target.value;
-        loadItems(term); // Llamamos a la API con cada letra escrita
-    });
-
-    // Función auxiliar para renderizar (el mismo map que ya tenías)
     function renderItems(data) {
-    itemsContainer.innerHTML = data.length === 0 
-        ? '<p style="text-align:center; color:#999;">No se encontraron resultados.</p>'
-        /* Ejemplo de cómo actualizar el renderItems para los nuevos estilos:*/
-       :data.map(item => `
+        if (data.length === 0) {
+            itemsContainer.innerHTML = '<p class="empty-state">No hay registros que coincidan.</p>';
+            return;
+        }
+        itemsContainer.innerHTML = data.map(item => `
             <div class="item-card">
                 <div class="item-info">
                     <h4>${item.name}</h4>
                     <p>${item.description || 'Sin descripción'}</p>
                 </div>
                 <div class="actions">
-                    <button class="btn-action edit-bg" onclick="prepareEdit(...)">
+                    <button class="btn-action edit-bg" title="Editar" 
+                            onclick="prepareEdit(${item.id}, '${item.name}', '${item.description}')">
                         <i class="fas fa-pen"></i>
                     </button>
-                    <button class="btn-action delete-bg" onclick="deleteItem(${item.id})">
+                    <button class="btn-action delete-bg" title="Eliminar" 
+                            onclick="deleteItem(${item.id})">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
-       `)
-    
-       // 2. CREAR (POST) / ACTUALIZAR (PUT)
+        `).join('');
+    }
+
+    // --- 2. CREAR (POST) / ACTUALIZAR (PUT) ---
     form.onsubmit = async (e) => {
         e.preventDefault();
-        
         const id = document.getElementById('itemId').value;
         const payload = {
             name: document.getElementById('name').value,
@@ -295,54 +264,48 @@
             body: JSON.stringify(payload)
         };
 
-        const url = id ? `${API_URL}/${id}` : API_URL;
-
         try {
-            const response = await fetch(url, config);
-            if (response.ok) {
+            const res = await fetch(id ? `${API_URL}/${id}` : API_URL, config);
+            if (res.ok) {
                 resetForm();
                 loadItems();
             }
         } catch (err) {
-            alert("Hubo un error al procesar la solicitud.");
+            alert("Error al guardar.");
         }
     };
 
-    // 3. ELIMINAR (DELETE)
+    // --- 3. ELIMINAR (DELETE) ---
     async function deleteItem(id) {
-        if (confirm('¿Estás seguro de que deseas eliminar este registro?')) {
-            try {
-                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-                loadItems();
-            } catch (err) {
-                console.error("Error al borrar:", err);
-            }
+        if (confirm('¿Eliminar este registro permanentemente?')) {
+            await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+            loadItems();
         }
     }
 
-    // Preparar el formulario para edición
+    // --- FUNCIONES DE APOYO ---
     window.prepareEdit = (id, name, desc) => {
         document.getElementById('itemId').value = id;
         document.getElementById('name').value = name;
         document.getElementById('description').value = desc;
-        
-        mainBtn.innerText = "Actualizar Producto";
-        mainBtn.style.background = "#3498db";
-        cancelBtn.style.display = "block";
+        mainBtn.innerHTML = '<i class="fas fa-sync"></i> Actualizar Registro';
+        mainBtn.style.backgroundColor = 'var(--warning)';
+        cancelBtn.style.display = 'inline-flex';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // Resetear formulario a su estado original
     function resetForm() {
         form.reset();
         document.getElementById('itemId').value = '';
-        mainBtn.innerText = "Guardar Producto";
-        mainBtn.style.background = "#27ae60";
-        cancelBtn.style.display = "none";
+        mainBtn.innerHTML = '<i class="fas fa-plus"></i> Guardar Registro';
+        mainBtn.style.backgroundColor = 'var(--primary)';
+        cancelBtn.style.display = 'none';
     }
 
+    searchInput.addEventListener('input', (e) => loadItems(e.target.value));
     cancelBtn.onclick = resetForm;
 
-    // Carga inicial al entrar
+    // Carga inicial
     loadItems();
 </script>
 
