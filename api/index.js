@@ -14,7 +14,7 @@ const app = express();
 // Middleware CORS: Esto le dice al navegador que acepte peticiones
 // provenientes de otros dominios/puertos (como el 8080 de tu cliente).
 app.use(cors({
-  origin: ['http://localhost:8080', 'https://tu-cliente-en-railway.up.railway.app']
+  origin: ['http://localhost:8080', 'https://agile-peace-production.up.railway.app']
 }));
 
 const PORT = process.env.APP_PORT || 3000;
